@@ -1,57 +1,57 @@
-import { Ionicons } from "@expo/vector-icons";
-import { JSX } from "react";
-import { Pressable, Text, View } from "react-native";
-import { colors, radius } from "../utils/theme";
-
-type Props = {
-    title?: string;
-    coins?: number;
-    onMenuPress?: () => void;
-    onCoinsPress?: () => void;
-};
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { Text, TouchableOpacity, View } from "react-native";
 
 export default function Header({
-    title = "HOME",
-    coins = 15,
-    onMenuPress,
-    onCoinsPress,
-}: Props): JSX.Element {
+    coins,
+    showBack = false, // by default false
+}: {
+    coins?: number;
+    showBack?: boolean;
+}) {
+    const navigation = useNavigation();
+
     return (
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-            <Pressable
-                onPress={onMenuPress}
-                style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: radius.pill,
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-                accessibilityLabel="Menu"
+        <View
+            style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: 16,
+            }}
+        >
+            {/* Left side: Menu OR Back */}
+            {showBack ? (
+                <TouchableOpacity
+                    style={{ alignItems: "center" }}
+                    onPress={() => navigation.navigate("home")} // back → home
+                >
+                    <Ionicons name="arrow-back" size={28} color="#333" />
+                    <Text style={{ fontSize: 10 }}>Back</Text>
+                </TouchableOpacity>
+            ) : (
+                <TouchableOpacity
+                    style={{ alignItems: "center" }}
+                    onPress={() => navigation.navigate("support")}
+                >
+                    <Ionicons name="menu" size={28} color="#333" />
+                    <Text style={{ fontSize: 10 }}>Menu</Text>
+                </TouchableOpacity>
+            )}
+            {/* Right: Gift + Coins */}
+            <TouchableOpacity
+                style={{ alignItems: "center" }}
+                onPress={() => navigation.navigate("Packages")}
             >
-                <Ionicons name="menu" size={26} color={colors.textDark} />
-            </Pressable>
-
-            <View style={{ flex: 1, alignItems: "center" }}>
-                <Text style={{ fontSize: 18, fontWeight: "800", letterSpacing: 1 }}>{title}</Text>
-            </View>
-
-            <Pressable
-                onPress={onCoinsPress}
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: colors.chip,
-                    paddingHorizontal: 12,
-                    height: 36,
-                    borderRadius: radius.pill,
-                    gap: 6,
-                }}
-                accessibilityLabel="Coins"
-            >
-                <Ionicons name="star" size={18} color={colors.purple} />
-                <Text style={{ fontWeight: "800" }}>{coins} COINS</Text>
-            </Pressable>
+                <MaterialCommunityIcons
+                    name="gift-outline"
+                    size={22}
+                    color="#333"
+                />
+                <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+                    {coins ?? 0}
+                </Text>
+            </TouchableOpacity>
         </View>
     );
 }

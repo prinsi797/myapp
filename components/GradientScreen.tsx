@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { JSX, ReactNode } from "react";
 import { StyleProp, View, ViewStyle } from "react-native";
@@ -17,8 +18,22 @@ export default function GradientScreen({ children, style }: Props): JSX.Element 
             end={{ x: 1, y: 1 }}
             style={{ flex: 1 }}
         >
+            {/* GIF background with expo-image */}
+            <Image
+                source={require("../assets/images/confetti.gif")}
+                style={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                }}
+                contentFit="cover"
+                blurRadius={5}
+            />
+
             <SafeAreaView style={{ flex: 1 }}>
-                <View style={[{ flex: 1, padding: 16 }, style]}>{children}</View>
+                <View style={[{ flex: 1, padding: 16 }, style]}>
+                    {children}
+                </View>
             </SafeAreaView>
         </LinearGradient>
     );

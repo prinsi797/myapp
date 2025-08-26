@@ -47,7 +47,7 @@ export default function PackCard({
                 </View>
             ) : null}
 
-            <Text style={{ fontSize: 20, fontWeight: "900" }}>{title}</Text>
+            <Text style={{ fontSize: 18, fontWeight: "700" }}>{title}</Text>
             <Text style={{ color: colors.purple, marginTop: 6, fontWeight: "700" }}>
                 {coinsText}
             </Text>

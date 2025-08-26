@@ -1,11 +1,20 @@
-import { Tabs } from "expo-router";
+import { Drawer } from "expo-router/drawer";
 
 export default function Layout() {
   return (
-    <Tabs>
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="support" options={{ title: "Support" }} />
-      <Tabs.Screen name="pick-winner" options={{ title: "PickWinner" }} />
-    </Tabs>
+    <Drawer screenOptions={{ headerShown: false }}>
+      <Drawer.Screen
+        name="index"
+        options={{ drawerLabel: "Home" }}
+      />
+      <Drawer.Screen
+        name="support"
+        options={{ drawerLabel: "Support" }}
+      />
+      <Drawer.Screen
+        name="pickwinner"
+        options={{ drawerLabel: "Pick Winner" }}
+      />
+    </Drawer>
   );
 }
