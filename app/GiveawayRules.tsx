@@ -48,14 +48,14 @@ export default function GiveawayRules() {
                 // Start recording
                 const startRes = await RecordScreen.startRecording({ mic: true });
                 // startRes shape can vary by platform/version; treat truthy as success
-                console.log("startRes:", startRes);
+                // console.log("startRes:", startRes);
                 setIsRecording(true);
                 setScreenRecordEnabled(true);
                 Alert.alert("Recording Started", "Screen recording has begun.");
             } else {
                 // Stop recording
                 const stopRes = await RecordScreen.stopRecording();
-                console.log("stopRes:", stopRes);
+                // console.log("stopRes:", stopRes);
 
                 // stopRes may be: { result: 'success', outputURL: 'file://...' } or similar
                 const outputURL =
@@ -98,7 +98,7 @@ export default function GiveawayRules() {
                     setScreenRecordEnabled(false);
                     if (outputURL) {
                         await AsyncStorage.setItem("lastRecordingPath", outputURL);
-                        console.log("Recording saved:", outputURL);
+                        // console.log("Recording saved:", outputURL);
                     }
                 } catch (e) {
                     console.warn("Failed to stop recording before starting giveaway:", e);
@@ -131,36 +131,78 @@ export default function GiveawayRules() {
                 }
             );
 
-            console.log("Winner API Response:", res.data);
+            // console.log("Winner API Response:", res.data);
 
             if (res.data?.success === "success") {
-                // ✅ Save to AsyncStorage for later use
-                await AsyncStorage.setItem("winnerData", JSON.stringify(res.data));
-                await AsyncStorage.setItem("postData", JSON.stringify(data));
+                try {
+                    // --- WinnerData ko append karo ---
+                    const storedWinner = await AsyncStorage.getItem("winnerData");
+                    let parsedWinners = storedWinner ? JSON.parse(storedWinner) : [];
 
-                const storedWinnerData = await AsyncStorage.getItem("winnerData");
-                const storedPostData = await AsyncStorage.getItem("postData");
+                    if (!Array.isArray(parsedWinners)) {
+                        parsedWinners = [parsedWinners];
+                    }
 
-                console.log("📦 Stored WinnerData (raw):", storedWinnerData);
-                console.log("📦 Stored WinnerData (parsed):", JSON.parse(storedWinnerData || "{}"));
-                console.log("📦 Stored PostData (raw):", storedPostData);
-                console.log("📦 Stored PostData (parsed):", JSON.parse(storedPostData || "{}"));
+                    // ✅ Naya winner entry (post + result dono sath me)
+                    const newWinnerEntry = {
+                        id: Date.now(), // unique id
+                        postUrl: data.post_url,
+                        postData: data, // jo aap already pass kar rahe ho
+                        winnerResponse: res.data, // API ka full response
+                        createdAt: new Date().toISOString(),
+                    };
 
+                    // Latest sabse upar dikhane ke liye unshift
+                    parsedWinners.unshift(newWinnerEntry);
 
-                setStarting(false);
+                    // AsyncStorage me save karo
+                    await AsyncStorage.setItem("winnerData", JSON.stringify(parsedWinners));
+                    // console.log("📦 WinnerData updated:", newWinnerEntry);
 
-                // ✅ Navigate to GiveawayStart
-                navigation.navigate("GiveawayStart", {
-                    countdownTime: countdown,
-                    winnersData: JSON.stringify(res.data),
-                    postData: JSON.stringify(data),
-                });
+                    // --- PostData ko bhi append karo ---
+                    const storedPosts = await AsyncStorage.getItem("postData");
+                    let parsedPosts = storedPosts ? JSON.parse(storedPosts) : [];
 
+                    if (!Array.isArray(parsedPosts)) {
+                        parsedPosts = [parsedPosts];
+                    }
+
+                    // naya post entry
+                    const newPostEntry = {
+                        id: Date.now(),
+                        ...data,
+                    };
+
+                    parsedPosts.unshift(newPostEntry);
+
+                    await AsyncStorage.setItem("postData", JSON.stringify(parsedPosts));
+                    // console.log("📦 PostData updated:", newPostEntry);
+
+                    // --- Debug Logs ---
+                    const storedWinnerData = await AsyncStorage.getItem("winnerData");
+                    const storedPostData = await AsyncStorage.getItem("postData");
+
+                    // console.log("📦 Stored WinnerData (parsed):", JSON.parse(storedWinnerData || "[]"));
+                    // console.log("📦 Stored PostData (parsed):", JSON.parse(storedPostData || "[]"));
+
+                    setStarting(false);
+
+                    // ✅ Navigate to GiveawayStart
+                    navigation.navigate("GiveawayStart", {
+                        countdownTime: countdown,
+                        winnersData: JSON.stringify(res.data),
+                        postData: JSON.stringify(data),
+                    });
+                } catch (err) {
+                    console.error("❌ Error saving winner/post data:", err);
+                    setStarting(false);
+                }
             } else {
                 const errorMessage = res.data?.message || "Unexpected error from API";
                 alert("Error: " + errorMessage);
                 setStarting(false);
             }
+
         } catch (err) {
             console.error("API Error:", err);
             alert("Something went wrong! Check console for details.");

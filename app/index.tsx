@@ -94,25 +94,28 @@ export default function Giveaway(): JSX.Element {
 
         // ✅ Store API response in local storage
         try {
-          await AsyncStorage.setItem(
-            "giveawayData",
-            JSON.stringify({
-              postUrl: link,
-              comments,
-              postData,
-              token,
-              fullResponse: res.data,
-            })
-          );
-          console.log("📦 Giveaway data saved locally");
-          setTimeout(async () => {
-            try {
-              const storedData = await AsyncStorage.getItem("giveawayData");
-              console.log("⏳ 5s baad local storage data:", storedData);
-            } catch (readErr) {
-              console.log("❌ Error reading stored data:", readErr);
-            }
-          }, 5000);
+          const storedData = await AsyncStorage.getItem("giveawayData");
+          let parsed = storedData ? JSON.parse(storedData) : [];
+
+          if (!Array.isArray(parsed)) {
+            parsed = [parsed];
+          }
+
+          // naya giveaway object
+          const newGiveaway = {
+            id: Date.now(), // unique id
+            postUrl: link,
+            comments,
+            postData,
+            token,
+            fullResponse: res.data,
+          };
+
+          // sabse pehle dikhane ke liye unshift
+          parsed.unshift(newGiveaway);
+
+          await AsyncStorage.setItem("giveawayData", JSON.stringify(parsed));
+          console.log("📦 Giveaway data appended locally");
         } catch (storageErr) {
           console.log("❌ Error saving data:", storageErr);
         }

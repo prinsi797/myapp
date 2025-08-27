@@ -13,7 +13,7 @@ export default function HowToGiveaway(): JSX.Element {
             <ScrollView
                 contentContainerStyle={{
                     paddingVertical: 20,
-                    alignItems: "center", // Center content for web
+                    alignItems: "center",
                 }}
                 showsVerticalScrollIndicator={false}
             >

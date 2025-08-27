@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons"; // 👈 Expo ke icon set
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -6,25 +7,25 @@ import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react
 export default function History() {
     const [historyData, setHistoryData] = useState<any[]>([]);
     const router = useRouter();
-    const deviceId = "YOUR_DEVICE_ID"; // ← Replace with actual device_id from your app logic
 
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const storedData = await AsyncStorage.getItem("giveawayData");
-                console.log("history data", storedData);
+                const storedData = await AsyncStorage.getItem("winnerData");
                 if (storedData) {
                     let parsed = JSON.parse(storedData);
 
-                    // ✅ Ensure parsed is always an array
                     if (!Array.isArray(parsed)) {
                         parsed = [parsed];
                     }
 
-                    // Filter giveaways for this device_id
-                    const filtered = parsed.filter((item: any) => item.device_id === deviceId);
+                    const formatted = parsed.map((entry: any) => ({
+                        id: entry.id,
+                        postData: entry.postData,
+                        winnerResponse: entry.winnerResponse,
+                    }));
 
-                    setHistoryData(filtered);
+                    setHistoryData(formatted);
                 }
             } catch (error) {
                 console.error("Error fetching history:", error);
@@ -36,20 +37,25 @@ export default function History() {
     const renderItem = ({ item }: { item: any }) => (
         <TouchableOpacity
             style={styles.itemContainer}
-            onPress={() => router.push({
-                pathname: "/more-history",
-                params: { giveawayId: item.id }
-            })}
+            onPress={() =>
+                router.push({
+                    pathname: "/MoreHistory",
+                    params: {
+                        giveawayId: item.id.toString(),
+                        data: JSON.stringify(item),
+                    },
+                })
+            }
         >
             <Image
-                source={{ uri: item.media?.[0]?.thumbnail }}
+                source={{ uri: item.postData?.media?.[0]?.thumbnail }}
                 style={styles.thumbnail}
                 resizeMode="cover"
             />
             <View style={{ flex: 1 }}>
-                <Text style={styles.username}>@{item.posted_by?.username}</Text>
+                <Text style={styles.username}>{item.postData?.posted_by?.username}</Text>
                 <Text style={styles.caption} numberOfLines={2}>
-                    {item.caption}
+                    {item.postData?.caption}
                 </Text>
             </View>
         </TouchableOpacity>
@@ -57,20 +63,49 @@ export default function History() {
 
     return (
         <View style={{ flex: 1, padding: 16 }}>
-            <Text style={styles.title}>Giveaway History</Text>
-            <FlatList
-                data={historyData}
-                keyExtractor={(item, index) => `${item.id}-${index}`}
-                renderItem={renderItem}
-            />
+            {/* 🔹 Custom Header */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    onPress={() => router.push("/support")} // 👈 Always go Support
+                    style={styles.backButton}
+                >
+                    <Ionicons name="arrow-back" size={24} color="black" />
+                </TouchableOpacity>
+                <Text style={styles.title}>Giveaway History</Text>
+                <View style={{ width: 24 }} />
+            </View>
+
+            {/* 🔹 List */}
+            <View style={{}}>
+                <FlatList
+                    data={historyData}
+                    keyExtractor={(item) => `${item.id}`}
+                    renderItem={renderItem}
+                />
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    title: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between", // title ko center lane ka trick
+        marginBottom: 20,
+        marginTop: 40,
+    },
+    backButton: {
+        width: 24,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: "bold",
+        textAlign: "center",
+        flex: 1,
+    },
     itemContainer: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
     thumbnail: { width: 80, height: 80, borderRadius: 8, marginRight: 10 },
     username: { fontWeight: "bold", fontSize: 16 },
-    caption: { color: "#555" }
+    caption: { color: "#555" },
 });

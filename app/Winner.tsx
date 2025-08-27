@@ -71,30 +71,30 @@ export default function PickWinner() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // ✅ Get all keys from AsyncStorage
-                const keys = await AsyncStorage.getAllKeys();
-
-                // ✅ Filter only giveawayData keys
-                const giveawayKeys = keys.filter(k => k.startsWith("giveawayData"));
-
-                let stored = null;
-                if (giveawayKeys.length > 0) {
-                    // ✅ Sort and pick last
-                    giveawayKeys.sort();
-                    const lastKey = giveawayKeys[giveawayKeys.length - 1];
-                    stored = await AsyncStorage.getItem(lastKey);
-                    console.log("📦 Last giveawayData key:", lastKey);
-                }
-
-                // ✅ Winner data stays the same
+                // ✅ Winner data load
                 const storedWinner = await AsyncStorage.getItem("winnerData");
 
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    console.log("📦 Local last giveaway data loaded:", parsed);
+                if (storedWinner) {
+                    const parsedWinner = JSON.parse(storedWinner);
 
+                    // ensure it's an array
+                    const winnerList = Array.isArray(parsedWinner) ? parsedWinner : [parsedWinner];
+
+                    // sabse latest entry (unshift se add kiya tha to index 0 latest hai)
+                    const lastWinnerEntry = winnerList[0];
+
+                    console.log("📦 Local LAST winner data loaded:", lastWinnerEntry);
+
+                    // ✅ Set winners & substitutes
+                    setWinners(lastWinnerEntry?.winnerResponse?.winners || []);
+                    setSubstitutes(lastWinnerEntry?.winnerResponse?.substitutes || []);
+
+                    // ✅ Set postData
+                    setPostData(lastWinnerEntry?.postData || null);
+
+                    // ✅ Set allComments (for scrolling slider)
                     const commenters =
-                        parsed?.fullResponse?.comments?.map((c: any) => ({
+                        lastWinnerEntry?.postData?.comments?.map((c: any) => ({
                             username: c.user?.username,
                             profile_pic: c.user?.profile_pic_url,
                             profile_url: c.user?.profile_url,
@@ -102,15 +102,6 @@ export default function PickWinner() {
                         })) || [];
 
                     setAllComments(commenters);
-                    setPostData(parsed.fullResponse);
-                }
-
-                if (storedWinner) {
-                    const parsedWinner = JSON.parse(storedWinner);
-                    console.log("📦 Local winner data loaded:", parsedWinner);
-
-                    setWinners(parsedWinner.winners || []);
-                    setSubstitutes(parsedWinner.substitutes || []);
                 } else {
                     console.log("⚠ No winner data found in local storage");
                 }
@@ -121,8 +112,6 @@ export default function PickWinner() {
 
         loadData();
     }, []);
-
-
 
     useEffect(() => {
         if (!allComments.length || !isScrolling) return;
@@ -289,7 +278,7 @@ export default function PickWinner() {
                         </View>
                     )}
 
-                    {/* alternat winner */}
+                    {/* Alternate Winners */}
                     {!isScrolling && (
                         <View style={{ marginTop: 20 }}>
                             <Text style={styles.winnerTitle}>🎉 Alternate Winners</Text>
@@ -313,13 +302,19 @@ export default function PickWinner() {
                                     });
                                 };
 
+                                // 👉 Rank continues from winners count
+                                const rankNumber = winners.length + idx + 1;
+                                const rank =
+                                    `${rankNumber}${rankNumber === 1 ? "st" : rankNumber === 2 ? "nd" : rankNumber === 3 ? "rd" : "th"}`;
+
                                 return (
                                     <View key={idx} style={styles.winnerContainer}>
-                                        <TouchableOpacity
-                                            style={styles.winnerRow}
-                                            onPress={handleWinnerPress}
-                                            activeOpacity={0.6}
-                                        >
+                                        <View style={styles.winnerRow}>
+                                            {/* Rank badge */}
+                                            <View style={styles.rankBadge}>
+                                                <Text style={styles.rankText}>{rank}</Text>
+                                            </View>
+
                                             <TouchableOpacity
                                                 onPress={handleWinnerPress}
                                                 style={styles.avatarContainer}
@@ -337,14 +332,11 @@ export default function PickWinner() {
                                                 <Text style={styles.winnerName}>
                                                     {w.user?.username} {w.user?.is_verified ? "✅" : ""}
                                                 </Text>
-                                                <Text style={styles.winnerText} numberOfLines={2}       // 🔹 Max 2 lines
-                                                    ellipsizeMode="tail"    // 🔹 Show "..." if text is longer
-                                                >
+                                                <Text style={styles.winnerText} numberOfLines={2} ellipsizeMode="tail">
                                                     {w.text}
                                                 </Text>
-                                                {/* <Text style={styles.clickHint}>Tap to open Instagram profile</Text> */}
                                             </TouchableOpacity>
-                                        </TouchableOpacity>
+                                        </View>
                                     </View>
                                 );
                             })}
@@ -430,12 +422,12 @@ const styles = StyleSheet.create({
     },
     rankBadge: {
         position: "absolute",
-        top: -8,
-        right: -8,
+        top: -10,
+        right: 10,
         backgroundColor: "#8B3A99",
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 10,
         zIndex: 1,
     },
     rankText: {
