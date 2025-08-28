@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons"; // 👈 Expo ke icon set
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -66,7 +66,7 @@ export default function History() {
             {/* 🔹 Custom Header */}
             <View style={styles.header}>
                 <TouchableOpacity
-                    onPress={() => router.push("/support")} // 👈 Always go Support
+                    onPress={() => router.push("/support")}
                     style={styles.backButton}
                 >
                     <Ionicons name="arrow-back" size={24} color="black" />
@@ -76,6 +76,7 @@ export default function History() {
             </View>
 
             {/* 🔹 List */}
+            {/* <ScrollView showsVerticalScrollIndicator={false}> */}
             <View style={{}}>
                 <FlatList
                     data={historyData}
@@ -83,6 +84,7 @@ export default function History() {
                     renderItem={renderItem}
                 />
             </View>
+            {/* </ScrollView> */}
         </View>
     );
 }
@@ -91,7 +93,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between", // title ko center lane ka trick
+        justifyContent: "space-between",
         marginBottom: 20,
         marginTop: 40,
     },

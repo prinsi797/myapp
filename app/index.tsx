@@ -3,7 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import * as Clipboard from 'expo-clipboard';
 
-import * as Application from "expo-application"; // ✅ to get device id
+import * as Application from "expo-application";
 
 import { JSX, useState } from "react";
 import {
@@ -25,7 +25,7 @@ const radius = {
   md: 8,
   lg: 12,
   xl: 20,
-  pill: 999, // large value so it looks like a pill
+  pill: 999,
 };
 
 export default function Giveaway(): JSX.Element {
@@ -35,11 +35,19 @@ export default function Giveaway(): JSX.Element {
   const [token, setToken] = useState<string | null>(null);
   const navigation = useNavigation();
 
-  // 🔹 Silent Register API Call
   const registerUser = async (): Promise<boolean> => {
     try {
-      let deviceId: string | null = null;
+      const storedResponse = await AsyncStorage.getItem("register_response");
 
+      if (storedResponse) {
+        const parsedData = JSON.parse(storedResponse);
+
+        setToken(parsedData.data.bearer_token);
+        setCoins(Number(parsedData.data.coin_count));
+        return true;
+      }
+
+      let deviceId: string | null = null;
       if (Platform.OS === "android") {
         deviceId = await Application.getAndroidId();
       } else if (Platform.OS === "ios") {
@@ -53,8 +61,12 @@ export default function Giveaway(): JSX.Element {
       });
 
       if (res.data.success === "success") {
-        setToken(res.data.data.bearer_token);
-        setCoins(res.data.data.coin_count);
+        const fullResponse = res.data;
+
+        setToken(fullResponse.data.bearer_token);
+        setCoins(fullResponse.data.coin_count);
+
+        await AsyncStorage.setItem("register_response", JSON.stringify(fullResponse));
         return true;
       } else {
         return false;
@@ -69,7 +81,6 @@ export default function Giveaway(): JSX.Element {
     try {
       setLoading(true);
 
-      // ✅ Step 1: Register
       const registered = await registerUser();
       if (!registered) {
         setLoading(false);
@@ -77,7 +88,6 @@ export default function Giveaway(): JSX.Element {
         return;
       }
 
-      // ✅ Step 2: Giveaway API
       const res = await axios.post(
         "https://instagram.adinsignia.com/new-instagram.php",
         {
@@ -92,7 +102,6 @@ export default function Giveaway(): JSX.Element {
         const comments = res.data?.data?.comments || [];
         const postData = res.data?.data?.post || {};
 
-        // ✅ Store API response in local storage
         try {
           const storedData = await AsyncStorage.getItem("giveawayData");
           let parsed = storedData ? JSON.parse(storedData) : [];
@@ -101,26 +110,21 @@ export default function Giveaway(): JSX.Element {
             parsed = [parsed];
           }
 
-          // naya giveaway object
           const newGiveaway = {
-            id: Date.now(), // unique id
+            id: Date.now(),
             postUrl: link,
             comments,
             postData,
             token,
             fullResponse: res.data,
           };
-
-          // sabse pehle dikhane ke liye unshift
           parsed.unshift(newGiveaway);
 
           await AsyncStorage.setItem("giveawayData", JSON.stringify(parsed));
-          console.log("📦 Giveaway data appended locally");
         } catch (storageErr) {
           console.log("❌ Error saving data:", storageErr);
         }
 
-        // ✅ Navigate after saving
         navigation.navigate("GiveawayRules", {
           data: { ...res.data, post_url: link },
           comments,

@@ -45,15 +45,14 @@ function Row({ icon, label, onPress }: RowProps): JSX.Element {
 
 export default function Support(): JSX.Element {
     const [showGiveaway, setShowGiveaway] = useState(false);
-    const router = useRouter(); // ✅ For navigation
+    const router = useRouter();
     return (
         <GradientScreen>
             <Header coins={15} />
-            {/* Main List */}
             <ScrollView
                 contentContainerStyle={{
                     paddingBottom: 40,
-                    alignItems: "center", // Web me center karega
+                    alignItems: "center",
                 }}
                 showsVerticalScrollIndicator={false}
             >
@@ -93,7 +92,7 @@ export default function Support(): JSX.Element {
                     <Row
                         icon="time"
                         label="Giveaway History"
-                        onPress={() => router.push("/History")} // ✅ navigate karega History.tsx pe
+                        onPress={() => router.push("/History")}
                     />
 
                     {/* Preferences */}

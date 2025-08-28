@@ -45,19 +45,12 @@ export default function GiveawayRules() {
     const handleScreenRecordToggle = async (value: boolean) => {
         try {
             if (value) {
-                // Start recording
                 const startRes = await RecordScreen.startRecording({ mic: true });
-                // startRes shape can vary by platform/version; treat truthy as success
-                // console.log("startRes:", startRes);
                 setIsRecording(true);
                 setScreenRecordEnabled(true);
                 Alert.alert("Recording Started", "Screen recording has begun.");
             } else {
-                // Stop recording
                 const stopRes = await RecordScreen.stopRecording();
-                // console.log("stopRes:", stopRes);
-
-                // stopRes may be: { result: 'success', outputURL: 'file://...' } or similar
                 const outputURL =
                     (stopRes && (stopRes.outputURL || (stopRes.result && stopRes.result.outputURL))) ||
                     (typeof stopRes === "string" ? stopRes : null);
@@ -69,8 +62,6 @@ export default function GiveawayRules() {
                     "Recording Stopped",
                     outputURL ? `Saved to: ${outputURL}` : "Recording saved to gallery"
                 );
-
-                // optional: save the path
                 if (outputURL) {
                     await AsyncStorage.setItem("lastRecordingPath", outputURL);
                 }
@@ -86,8 +77,6 @@ export default function GiveawayRules() {
     const startGiveawayHandler = async () => {
         try {
             setStarting(true);
-
-            // if recording is active, stop it and save path before proceeding
             if (isRecording) {
                 try {
                     const stopRes = await RecordScreen.stopRecording();
@@ -98,14 +87,11 @@ export default function GiveawayRules() {
                     setScreenRecordEnabled(false);
                     if (outputURL) {
                         await AsyncStorage.setItem("lastRecordingPath", outputURL);
-                        // console.log("Recording saved:", outputURL);
                     }
                 } catch (e) {
                     console.warn("Failed to stop recording before starting giveaway:", e);
                 }
             }
-
-            // ✅ Safe device ID fetch with fallback
             let deviceId = "unknown-device";
             try {
                 if (Platform.OS === "android" && Application.getAndroidId) {
@@ -116,8 +102,6 @@ export default function GiveawayRules() {
             } catch (e) {
                 console.warn("Device ID fetch failed:", e);
             }
-
-            // ✅ API Call
             const res = await axios.post(
                 "https://instagram.adinsignia.com/winner.php",
                 {
@@ -130,44 +114,30 @@ export default function GiveawayRules() {
                     device_id: deviceId,
                 }
             );
-
-            // console.log("Winner API Response:", res.data);
-
             if (res.data?.success === "success") {
                 try {
-                    // --- WinnerData ko append karo ---
                     const storedWinner = await AsyncStorage.getItem("winnerData");
                     let parsedWinners = storedWinner ? JSON.parse(storedWinner) : [];
 
                     if (!Array.isArray(parsedWinners)) {
                         parsedWinners = [parsedWinners];
                     }
-
-                    // ✅ Naya winner entry (post + result dono sath me)
                     const newWinnerEntry = {
-                        id: Date.now(), // unique id
+                        id: Date.now(),
                         postUrl: data.post_url,
-                        postData: data, // jo aap already pass kar rahe ho
-                        winnerResponse: res.data, // API ka full response
+                        postData: data,
+                        winnerResponse: res.data,
                         createdAt: new Date().toISOString(),
                     };
-
-                    // Latest sabse upar dikhane ke liye unshift
                     parsedWinners.unshift(newWinnerEntry);
 
-                    // AsyncStorage me save karo
                     await AsyncStorage.setItem("winnerData", JSON.stringify(parsedWinners));
-                    // console.log("📦 WinnerData updated:", newWinnerEntry);
-
-                    // --- PostData ko bhi append karo ---
                     const storedPosts = await AsyncStorage.getItem("postData");
                     let parsedPosts = storedPosts ? JSON.parse(storedPosts) : [];
 
                     if (!Array.isArray(parsedPosts)) {
                         parsedPosts = [parsedPosts];
                     }
-
-                    // naya post entry
                     const newPostEntry = {
                         id: Date.now(),
                         ...data,
@@ -176,18 +146,12 @@ export default function GiveawayRules() {
                     parsedPosts.unshift(newPostEntry);
 
                     await AsyncStorage.setItem("postData", JSON.stringify(parsedPosts));
-                    // console.log("📦 PostData updated:", newPostEntry);
 
-                    // --- Debug Logs ---
                     const storedWinnerData = await AsyncStorage.getItem("winnerData");
                     const storedPostData = await AsyncStorage.getItem("postData");
 
-                    // console.log("📦 Stored WinnerData (parsed):", JSON.parse(storedWinnerData || "[]"));
-                    // console.log("📦 Stored PostData (parsed):", JSON.parse(storedPostData || "[]"));
-
                     setStarting(false);
 
-                    // ✅ Navigate to GiveawayStart
                     navigation.navigate("GiveawayStart", {
                         countdownTime: countdown,
                         winnersData: JSON.stringify(res.data),
@@ -211,7 +175,6 @@ export default function GiveawayRules() {
     };
     return (
         <GradientScreen>
-            {/* Back Button */}
             <View style={styles.customHeader}>
                 <TouchableOpacity
                     onPress={() => router.push("/")}
@@ -237,7 +200,6 @@ export default function GiveawayRules() {
                 contentContainerStyle={{ paddingBottom: 40 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Thumbnail */}
                 <View style={styles.imageWrapper}>
                     {loading && (
                         <View style={styles.placeholder}>
@@ -261,10 +223,6 @@ export default function GiveawayRules() {
                 {/* Options */}
                 <View style={{ marginTop: 20 }}>
                     {/* Screen Record */}
-                    {/* <View style={styles.optionRow}>
-                        <Text style={styles.optionLabel}>Screen Record</Text>
-                        <Switch value={false} onValueChange={() => { }} />
-                    </View> */}
                     <View style={styles.optionRow}>
                         <View style={styles.recordLabelContainer}>
                             <Text style={styles.optionLabel}>Screen Record</Text>

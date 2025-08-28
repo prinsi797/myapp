@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native"; // 🔹 Add this
+import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -15,6 +15,14 @@ import {
 } from "react-native";
 import GradientScreen from "../components/GradientScreen";
 
+// ✅ Safe text helper
+const safeText = (value: any) => {
+    if (typeof value === "string") return value;
+    if (typeof value === "number") return String(value);
+    if (value === null || value === undefined) return "";
+    return String(value);
+};
+
 
 export default function PickWinner() {
     const navigation = useNavigation(); // 🔹 Navigation hook
@@ -27,40 +35,27 @@ export default function PickWinner() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollRef = useRef<FlatList>(null);
 
-    // Profile pe redirect karne ka function
     const openProfile = async (profileUrl: string, username: string) => {
         try {
-            console.log("🔍 Trying to open profile:", profileUrl, "for user:", username);
-
             if (profileUrl) {
-                // Instagram URL ko clean karte hain
                 let cleanUrl = profileUrl.trim();
                 if (!cleanUrl.startsWith('http')) {
                     cleanUrl = `https://www.instagram.com/${username}`;
                 }
 
-                console.log("🔗 Final URL:", cleanUrl);
-
                 const supported = await Linking.canOpenURL(cleanUrl);
-                console.log("✅ URL supported:", supported);
 
                 if (supported) {
                     await Linking.openURL(cleanUrl);
-                    console.log("🚀 Profile opened successfully");
                 } else {
-                    // Fallback - direct Instagram username URL
                     const fallbackUrl = `https://www.instagram.com/${username}`;
-                    console.log("🔄 Trying fallback URL:", fallbackUrl);
                     await Linking.openURL(fallbackUrl);
                 }
             } else {
-                // If no profile URL, create one with username
                 const directUrl = `https://www.instagram.com/${username}`;
-                console.log("📝 Creating direct URL:", directUrl);
                 await Linking.openURL(directUrl);
             }
         } catch (error) {
-            console.log("❌ Error opening profile:", error);
             Alert.alert(
                 "Profile Open Error",
                 `Could not open @${username}'s profile. Error: ${error}`
@@ -71,28 +66,20 @@ export default function PickWinner() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // ✅ Winner data load
                 const storedWinner = await AsyncStorage.getItem("winnerData");
 
                 if (storedWinner) {
                     const parsedWinner = JSON.parse(storedWinner);
-
-                    // ensure it's an array
                     const winnerList = Array.isArray(parsedWinner) ? parsedWinner : [parsedWinner];
-
-                    // sabse latest entry (unshift se add kiya tha to index 0 latest hai)
                     const lastWinnerEntry = winnerList[0];
 
                     console.log("📦 Local LAST winner data loaded:", lastWinnerEntry);
 
-                    // ✅ Set winners & substitutes
                     setWinners(lastWinnerEntry?.winnerResponse?.winners || []);
                     setSubstitutes(lastWinnerEntry?.winnerResponse?.substitutes || []);
 
-                    // ✅ Set postData
                     setPostData(lastWinnerEntry?.postData || null);
 
-                    // ✅ Set allComments (for scrolling slider)
                     const commenters =
                         lastWinnerEntry?.postData?.comments?.map((c: any) => ({
                             username: c.user?.username,
@@ -128,7 +115,7 @@ export default function PickWinner() {
         const timer = setTimeout(() => {
             clearInterval(interval);
             setIsScrolling(false);
-        }, 1000);
+        }, 200);
 
         return () => {
             clearInterval(interval);
@@ -150,12 +137,11 @@ export default function PickWinner() {
             <ScrollView
                 contentContainerStyle={{
                     paddingVertical: 20,
-                    alignItems: "center", // Center content for web
+                    alignItems: "center",
                 }}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={{ flex: 1, padding: 16 }}>
-                    {/* 🔹 Commenters Slider */}
                     {isScrolling && (
                         <FlatList
                             ref={scrollRef}
@@ -173,10 +159,11 @@ export default function PickWinner() {
                                     activeOpacity={0.7}
                                 >
                                     <Image source={{ uri: item.profile_pic }} style={styles.avatar} />
-                                    <Text numberOfLines={1} style={styles.username}>
-                                        {item.username}
-                                        {item.is_verified ? " ✅" : ""}
+
+                                    <Text style={styles.username}>
+                                        {safeText(item.username)}
                                     </Text>
+
                                 </TouchableOpacity>
                             )}
                         />
@@ -205,13 +192,11 @@ export default function PickWinner() {
                                 <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 4 }}>
                                     @{postData?.posted_by?.username}
                                 </Text>
-                                <Text
-                                    style={{ color: "#555" }}
-                                    numberOfLines={3}
-                                    ellipsizeMode="tail"
-                                >
-                                    {postData?.caption}
+
+                                <Text style={{ color: "#555" }} numberOfLines={3} ellipsizeMode="tail">
+                                    {safeText(postData?.caption)}
                                 </Text>
+
                             </View>
                         </View>
                     )}
@@ -264,12 +249,14 @@ export default function PickWinner() {
                                                 onPress={handleWinnerPress}
                                                 style={styles.winnerInfo}
                                             >
+
                                                 <Text style={styles.winnerName}>
-                                                    {w.user?.username} {w.user?.is_verified ? "✅" : ""}
+                                                    {safeText(w.user?.username)} {w.user?.is_verified ? "✅" : ""}
                                                 </Text>
                                                 <Text style={styles.winnerText} numberOfLines={2} ellipsizeMode="tail">
-                                                    {w.text}
+                                                    {safeText(w.text)}
                                                 </Text>
+
                                             </TouchableOpacity>
                                         </View>
                                     </View>
@@ -302,7 +289,6 @@ export default function PickWinner() {
                                     });
                                 };
 
-                                // 👉 Rank continues from winners count
                                 const rankNumber = winners.length + idx + 1;
                                 const rank =
                                     `${rankNumber}${rankNumber === 1 ? "st" : rankNumber === 2 ? "nd" : rankNumber === 3 ? "rd" : "th"}`;
@@ -330,10 +316,11 @@ export default function PickWinner() {
                                                 style={styles.winnerInfo}
                                             >
                                                 <Text style={styles.winnerName}>
-                                                    {w.user?.username} {w.user?.is_verified ? "✅" : ""}
+                                                    {safeText(w.user?.username)} {w.user?.is_verified ? "✅" : ""}
                                                 </Text>
+
                                                 <Text style={styles.winnerText} numberOfLines={2} ellipsizeMode="tail">
-                                                    {w.text}
+                                                    {safeText(w.text)}
                                                 </Text>
                                             </TouchableOpacity>
                                         </View>
@@ -348,7 +335,7 @@ export default function PickWinner() {
                         <TouchableOpacity
                             style={styles.endButton}
                             onPress={() => {
-                                navigation.navigate("index"); // 🔹 Home page redirect
+                                navigation.navigate("index");
                             }}
                         >
                             <Text style={styles.endButtonText}>End Giveaway</Text>

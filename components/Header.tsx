@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 export default function Header({
     coins,
-    showBack = false, // by default false
+    showBack = false,
 }: {
     coins?: number;
     showBack?: boolean;
@@ -20,11 +20,10 @@ export default function Header({
                 padding: 16,
             }}
         >
-            {/* Left side: Menu OR Back */}
             {showBack ? (
                 <TouchableOpacity
                     style={{ alignItems: "center" }}
-                    onPress={() => navigation.navigate("home")} // back → home
+                    onPress={() => navigation.navigate("home")}
                 >
                     <Ionicons name="arrow-back" size={28} color="#333" />
                     <Text style={{ fontSize: 10 }}>Back</Text>

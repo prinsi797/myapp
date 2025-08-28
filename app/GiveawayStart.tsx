@@ -11,7 +11,6 @@ export default function GiveawayStart() {
     useEffect(() => {
         try {
             const parsedWinners = JSON.parse(winnersData);
-            console.log("🎯 WinnersData (parsed):", parsedWinners);
         } catch (err) {
             console.log("⚠️ WinnersData parse error:", err, winnersData);
         }
@@ -25,7 +24,7 @@ export default function GiveawayStart() {
             router.replace({
                 pathname: "/Winner",
                 params: {
-                    winnersData, // Already stringified from previous screen
+                    winnersData,
                     postData,
                     comments,
                     giveawayCompleted: false

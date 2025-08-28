@@ -17,10 +17,7 @@ export default function HowToGiveaway(): JSX.Element {
                 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Wrapper to limit width on web */}
                 <View style={{ width: "100%", maxWidth: 600, paddingHorizontal: 20 }}>
-
-                    {/* Header with Close Button */}
                     <View
                         style={{
                             flexDirection: "row",
@@ -35,8 +32,6 @@ export default function HowToGiveaway(): JSX.Element {
                             <Ionicons name="close" size={28} color="#000" />
                         </Pressable>
                     </View>
-
-                    {/* Demo Card */}
                     <View
                         style={{
                             backgroundColor: "rgba(255,255,255,0.6)",

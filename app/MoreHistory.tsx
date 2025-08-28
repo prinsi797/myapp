@@ -29,7 +29,6 @@ export default function MoreHistory() {
 
     return (
         <View style={styles.container}>
-            {/* 🔹 Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.push("/History")}>
                     <Ionicons name="arrow-back" size={24} color="black" />
@@ -38,21 +37,15 @@ export default function MoreHistory() {
                 <View style={{ width: 24 }} />
             </View>
 
-            {/* 🔹 Post Info */}
             <View style={styles.postCard}>
-                {/* Left Thumbnail */}
                 <Image
                     source={{ uri: winnerData.postData?.media?.[0]?.thumbnail }}
                     style={styles.postThumbnail}
                 />
-
-                {/* Right Side Content */}
                 <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.caption} numberOfLines={3}>
                         {winnerData.postData?.caption}
                     </Text>
-
-                    {/* Comments Row */}
                     <View style={styles.commentRow}>
                         <Ionicons name="chatbubble-outline" size={18} color="#444" />
                         <Text style={styles.commentCount}>
@@ -68,8 +61,8 @@ export default function MoreHistory() {
                 borderRadius: 8,
                 paddingLeft: 10,
                 marginBottom: 16,
-                elevation: 2, // Android shadow
-                shadowColor: "#000", // iOS shadow
+                elevation: 2,
+                shadowColor: "#000",
                 shadowOpacity: 0.1,
                 shadowOffset: { width: 0, height: 2 },
                 shadowRadius: 4,
@@ -99,8 +92,8 @@ export default function MoreHistory() {
                 borderRadius: 8,
                 paddingLeft: 10,
                 marginBottom: 16,
-                elevation: 2, // Android shadow
-                shadowColor: "#000", // iOS shadow
+                elevation: 2,
+                shadowColor: "#000",
                 shadowOpacity: 0.1,
                 shadowOffset: { width: 0, height: 2 },
                 shadowRadius: 4,
@@ -145,8 +138,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 10,
         marginBottom: 16,
-        elevation: 2, // Android shadow
-        shadowColor: "#000", // iOS shadow
+        elevation: 2,
+        shadowColor: "#000",
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 4,
